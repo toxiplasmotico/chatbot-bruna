@@ -34,7 +34,7 @@ def chat():
         client = get_client()
 
         response = client.models.generate_content(
-            model="models/gemini-1.5-flash",
+            model="gemini-1.5-flash-latest",
             contents=f"{SYSTEM_PROMPT}\nUsuário: {user_message}"
         )
 
