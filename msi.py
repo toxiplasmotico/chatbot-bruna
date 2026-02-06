@@ -14,14 +14,13 @@ SYSTEM_PROMPT = (
 
 def get_model():
     api_key = os.getenv("GEMINI_API_KEY")
-
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY não configurada no ambiente.")
+        raise RuntimeError("GEMINI_API_KEY não configurada.")
 
     genai.configure(api_key=api_key)
 
     return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-1.0-pro",
         system_instruction=SYSTEM_PROMPT
     )
 
@@ -44,9 +43,9 @@ def chat():
         return jsonify({"response": response.text})
 
     except Exception as e:
-        print("ERRO:", str(e))  # aparece no log do Render
+        print("🔥 ERRO REAL:", str(e))
         return jsonify({
-            "response": "Erro interno no servidor 😵‍💫. O admin já foi avisado!"
+            "response": "Erro interno no servidor 😵‍💫. Tente novamente."
         }), 500
 
 if __name__ == "__main__":
