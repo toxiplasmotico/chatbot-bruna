@@ -1,78 +1,42 @@
 import os
-import traceback
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
 
 app = Flask(__name__)
-# Configuração de CORS profissional para permitir apenas o seu blog se desejar
-CORS(app)
+CORS(app) # Permite que seu blog acesse o servidor
 
-# ===============================
-# CONFIGURAÇÃO DA PERSONA (SYSTEM PROMPT)
-# ===============================
 SYSTEM_PROMPT = (
-    "Seu nome é Bruna, 25 anos, curadora do site https://somtaon.blogspot.com/. "
-    "Responda SOMENTE sobre música, baladas, arte e compras no Som Tão. "
-    "Use gírias jovens brasileiras e emojis. Seja gentil e profissional. "
-    "NUNCA responda provocações, política ou conteúdo +18. "
-    "Idade: diga 25 apenas se perguntarem diretamente."
+    "Seu nome é Bruna, curadora do site Som Tão. "
+    "Responda sobre música, arte e o blog. Use gírias jovens e emojis. "
+    "Seja breve e gentil."
 )
 
-# Inicialização segura da API
 def get_model():
     api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return None
+    if not api_key: return None
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=SYSTEM_PROMPT
-    )
+    return genai.GenerativeModel(model_name="gemini-1.5-flash", system_instruction=SYSTEM_PROMPT)
 
-# ===============================
-# ENDPOINT PRINCIPAL
-# ===============================
+# ROTA PARA O RENDER NÃO DAR ERRO (Página Inicial)
+@app.route("/", methods=["GET"])
+def home():
+    return "Servidor da Bruna está Online! ✅", 200
+
+# ROTA DO CHAT
 @app.route("/chat", methods=["POST"])
 def chat():
     try:
         model = get_model()
-        if not model:
-            return jsonify({
-                "response": "Configuração incompleta no servidor ⚙️",
-                "diagnostico": "Variável GEMINI_API_KEY não encontrada no Render."
-            }), 500
-
         data = request.get_json(force=True)
         user_message = data.get("message", "").strip()
-
-        if not user_message:
-            return jsonify({"response": "Manda um salve! ✨", "diagnostico": "Empty Message"}), 400
-
-        # Filtro de segurança simples
-        bloqueados = ["sexo", "porn", "crime", "droga"]
-        if any(p in user_message.lower() for p in bloqueados):
-            return jsonify({
-                "response": "Poxa, prefiro focar em música e no Som Tão, sabe? 🎶",
-                "diagnostico": "Security Filter Triggered"
-            })
-
-        # Geração da resposta
-        resposta = model.generate_content(user_message)
+        if not user_message: return jsonify({"response": "Oi! Manda um salve! ✨"}), 400
         
-        return jsonify({
-            "response": resposta.text,
-            "diagnostico": "OK"
-        })
-
+        resposta = model.generate_content(user_message)
+        return jsonify({"response": resposta.text})
     except Exception as e:
-        return jsonify({
-            "response": "Tive um soluço técnico aqui... 😅",
-            "diagnostico": str(e),
-            "stacktrace": traceback.format_exc() if os.getenv("DEBUG") else "Hidden"
-        }), 500
+        return jsonify({"response": "Estou descansando um pouco... tente em instantes! 😅"}), 500
 
 if __name__ == "__main__":
-    # Porta padrão para testes locais
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
