@@ -1,12 +1,12 @@
 import os
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Importante!
+from flask_cors import CORS
 import google.generativeai as genai
 
 app = Flask(__name__)
 
-# CONFIGURAÇÃO DE SEGURANÇA (Resolve o erro do Inspecionar)
-CORS(app, resources={r"/*": {"origins": "*"}}) 
+# ESTA LINHA É A CHAVE: Ela libera o acesso para o seu blog
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 SYSTEM_PROMPT = (
     "Seu nome é Bruna, curadora do site Som Tão. "
@@ -24,8 +24,9 @@ def get_model():
 def home():
     return "Servidor da Bruna Online! ✅", 200
 
-@app.route("/chat", methods=["POST", "OPTIONS"]) # OPTIONS é necessário para o CORS
+@app.route("/chat", methods=["POST", "OPTIONS"])
 def chat():
+    # Responde à "pergunta silenciosa" do navegador (Pre-flight)
     if request.method == "OPTIONS":
         return "", 200
         
