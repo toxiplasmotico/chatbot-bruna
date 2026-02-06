@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
+from google import genai
 
 app = Flask(__name__)
 CORS(app)
@@ -12,17 +12,11 @@ SYSTEM_PROMPT = (
     "Seja breve e simpática."
 )
 
-def get_model():
+def get_client():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY não configurada no Render.")
-
-    genai.configure(api_key=api_key)
-
-    return genai.GenerativeModel(
-        model_name="gemini-1.5-flash-latest",
-        system_instruction=SYSTEM_PROMPT
-    )
+    return genai.Client(api_key=api_key)
 
 @app.route("/", methods=["GET"])
 def home():
@@ -37,11 +31,12 @@ def chat():
         if not user_message:
             return jsonify({"response": "Manda um salve! ✨"}), 400
 
-        model = get_model()
-        response = model.generate_content(user_message)
+        client = get_client()
 
-        if not response or not response.text:
-            raise RuntimeError("Resposta vazia do Gemini")
+        response = client.models.generate_content(
+            model="models/gemini-1.5-flash",
+            contents=f"{SYSTEM_PROMPT}\nUsuário: {user_message}"
+        )
 
         return jsonify({"response": response.text})
 
