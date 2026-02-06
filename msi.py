@@ -15,12 +15,12 @@ SYSTEM_PROMPT = (
 def get_model():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY não configurada.")
+        raise RuntimeError("GEMINI_API_KEY não configurada no Render.")
 
     genai.configure(api_key=api_key)
 
     return genai.GenerativeModel(
-        model_name="gemini-1.0-pro",
+        model_name="gemini-1.5-flash-latest",
         system_instruction=SYSTEM_PROMPT
     )
 
@@ -39,6 +39,9 @@ def chat():
 
         model = get_model()
         response = model.generate_content(user_message)
+
+        if not response or not response.text:
+            raise RuntimeError("Resposta vazia do Gemini")
 
         return jsonify({"response": response.text})
 
